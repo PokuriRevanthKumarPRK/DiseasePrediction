@@ -12,7 +12,7 @@ def load_model():
 
 @st.cache_resource
 def load_generator():
-    return pipeline(model="microsoft/biogpt")
+    return pipeline("text-generation", model="distilgpt2")
 
 model = load_model()
 generator = load_generator()
@@ -49,7 +49,7 @@ symptom_list = ['itching', 'skin_rash', 'nodal_skin_eruptions', 'continuous_snee
 
 @st.cache_data(show_spinner=False)
 def get_definition(disease):
-    return generator(f"{disease} is ", do_sample=True, num_return_sequences=1)[0]['generated_text']
+    return generator(f"{disease} is ", max_length=50, num_return_sequences=1)[0]['generated_text']
 
 @st.cache_data(show_spinner=False)
 def get_treatment(disease):
