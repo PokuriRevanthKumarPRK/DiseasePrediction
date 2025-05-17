@@ -4,3 +4,5 @@ joblib
 scikit-learn
 transformers
 huggingface_hub
+tensorflow
+pytorch
