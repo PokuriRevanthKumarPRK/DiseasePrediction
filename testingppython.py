@@ -3,14 +3,13 @@ import numpy as np
 import joblib
 from huggingface_hub import hf_hub_download
 from transformers import pipeline
-from duckduckgo_search import DDGS
 
-# Load model
+
 @st.cache_resource
 def load_model():
     return joblib.load(hf_hub_download("AWeirdDev/human-disease-prediction", "sklearn_model.joblib"))
 
-# Load BioGPT pipeline
+
 @st.cache_resource
 def load_generator():
     return pipeline(model="microsoft/biogpt")
@@ -18,7 +17,7 @@ def load_generator():
 model = load_model()
 generator = load_generator()
 
-# Symptom list
+
 symptom_list = ['itching', 'skin_rash', 'nodal_skin_eruptions', 'continuous_sneezing', 'shivering', 'chills', 
                 'joint_pain', 'stomach_pain', 'acidity', 'ulcers_on_tongue', 'muscle_wasting', 'vomiting', 
                 'burning_micturition', 'spotting_ urination', 'fatigue', 'weight_gain', 'anxiety', 
