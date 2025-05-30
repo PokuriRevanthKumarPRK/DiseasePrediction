@@ -2,4 +2,4 @@
 
 
 
-This project also uses [AWeirdDev/human-disease-prediction] and [distilbert/distilgpt2]
+This project also uses [AWeirdDev/human-disease-prediction] 
