@@ -12,7 +12,7 @@ def load_model():
 
 @st.cache_resource
 def load_generator():
-    return pipeline("text-generation", model="distilgpt2")
+    return pipeline("text2text-generation", model="google/flan-t5-base")
 
 model = load_model()
 generator = load_generator()
