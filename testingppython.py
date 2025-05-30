@@ -2,21 +2,14 @@ import streamlit as st
 import numpy as np
 import joblib
 from huggingface_hub import hf_hub_download
-from transformers import pipeline
 from duckduckgo_search import DDGS
+import wikipedia
 
 @st.cache_resource
 def load_model():
     return joblib.load(hf_hub_download("AWeirdDev/human-disease-prediction", "sklearn_model.joblib"))
 
-
-@st.cache_resource
-def load_generator():
-    return pipeline("text2text-generation", model="google/flan-t5-large")
-
 model = load_model()
-generator = load_generator()
-
 
 symptom_list = ['itching', 'skin_rash', 'nodal_skin_eruptions', 'continuous_sneezing', 'shivering', 'chills', 
                 'joint_pain', 'stomach_pain', 'acidity', 'ulcers_on_tongue', 'muscle_wasting', 'vomiting', 
@@ -47,18 +40,17 @@ symptom_list = ['itching', 'skin_rash', 'nodal_skin_eruptions', 'continuous_snee
                 'scurring', 'skin_peeling', 'silver_like_dusting', 'small_dents_in_nails', 'inflammatory_nails', 
                 'blister', 'red_sore_around_nose', 'yellow_crust_ooze']
 
+# Wikipedia summary function
 @st.cache_data(show_spinner=False)
-def get_definition(disease):
-    return generator(f"Define the disease {disease}.", max_length=50, num_return_sequences=1)[0]['generated_text']
-
-@st.cache_data(show_spinner=False)
-def get_treatment(disease):
-    return generator(f"What are the common treatments for {disease}?", do_sample=True, num_return_sequences=1)[0]['generated_text']
-
-@st.cache_data(show_spinner=False)
-def get_urgency(disease):
-    return generator(f"How urgent is treatment for {disease}?", do_sample=True, num_return_sequences=1)[0]['generated_text']
-
+def get_wikipedia_summary(disease):
+    try:
+        return wikipedia.summary(disease, sentences=4)
+    except wikipedia.exceptions.DisambiguationError as e:
+        return f"🔍 Multiple entries found for '{disease}': {e.options[:3]}"
+    except wikipedia.exceptions.PageError:
+        return f"❌ No Wikipedia page found for '{disease}'."
+    except Exception as e:
+        return f"⚠️ Error: {str(e)}"
 
 # Search for hospitals using DuckDuckGo
 def search_hospitals(predicted_disease, user_location, max_results=5):
@@ -73,6 +65,7 @@ def search_hospitals(predicted_disease, user_location, max_results=5):
             })
     return results
 
+# UI starts here
 st.title("🧠 Early Disease Prediction")
 
 age = st.slider("Select your age", 0, 100, 25)
@@ -92,14 +85,12 @@ if st.button("🩺 Detect Disease"):
     prediction = model.predict(input_data)
     predicted_disease = prediction[0]
 
-    with st.spinner("🔍 Fetching..."):
-        definition = get_definition(predicted_disease)
-        treatment = get_treatment(predicted_disease)
-        urgency = get_urgency(predicted_disease)
+    with st.spinner("🔍 Fetching information..."):
+        wiki_summary = get_wikipedia_summary(predicted_disease)
         hospitals = search_hospitals(predicted_disease, location) if location else []
 
-    st.success(f" **Predicted Disease:** {predicted_disease}")
-    st.markdown(f"**About {predicted_disease}:**\n\n{definition}\n\n**Treatment:**\n\n{treatment}\n\n**Urgency:**\n\n{urgency}")
+    st.success(f"**Predicted Disease:** {predicted_disease}")
+    st.markdown(f"**About {predicted_disease} (from Wikipedia):**\n\n{wiki_summary}")
 
     if hospitals:
         st.subheader("🏥 Nearby Hospitals with Appointment Links:")
