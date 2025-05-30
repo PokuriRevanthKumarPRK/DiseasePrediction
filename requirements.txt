@@ -8,3 +8,5 @@ tensorflow
 tf-keras
 torch
 duckduckgo-search
+sentencepiece
+tokenizers
