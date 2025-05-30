@@ -3,7 +3,7 @@ import numpy as np
 import joblib
 from huggingface_hub import hf_hub_download
 from transformers import pipeline
-
+from duckduckgo_search import DDGS
 
 @st.cache_resource
 def load_model():
