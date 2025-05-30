@@ -9,14 +9,13 @@ from duckduckgo_search import DDGS
 def load_model():
     return joblib.load(hf_hub_download("AWeirdDev/human-disease-prediction", "sklearn_model.joblib"))
 
-
 @st.cache_resource
 def load_generator():
-    return pipeline("text2text-generation", model="microsoft/biogpt")
+    # BioGPT is a causal language model, so use text-generation pipeline
+    return pipeline("text-generation", model="microsoft/biogpt", max_length=150)
 
 model = load_model()
 generator = load_generator()
-
 
 symptom_list = ['itching', 'skin_rash', 'nodal_skin_eruptions', 'continuous_sneezing', 'shivering', 'chills', 
                 'joint_pain', 'stomach_pain', 'acidity', 'ulcers_on_tongue', 'muscle_wasting', 'vomiting', 
@@ -48,18 +47,31 @@ symptom_list = ['itching', 'skin_rash', 'nodal_skin_eruptions', 'continuous_snee
                 'blister', 'red_sore_around_nose', 'yellow_crust_ooze']
 
 @st.cache_data(show_spinner=False)
+def generate_text(prompt):
+    outputs = generator(prompt, max_length=150, num_return_sequences=1)
+    # BioGPT output is in outputs[0]['generated_text']
+    # Sometimes it repeats prompt, so strip the prompt from output to get only the generated part:
+    text = outputs[0]['generated_text']
+    # Remove prompt from start if present
+    if text.lower().startswith(prompt.lower()):
+        text = text[len(prompt):].strip()
+    return text
+
+@st.cache_data(show_spinner=False)
 def get_definition(disease):
-    return generator(f"{disease} is ", max_length=50, num_return_sequences=1)[0]['generated_text']
+    prompt = f"What is {disease}? "
+    return generate_text(prompt)
 
 @st.cache_data(show_spinner=False)
 def get_treatment(disease):
-    return generator(f"In studies, {disease} is treated by ", do_sample=True, num_return_sequences=1)[0]['generated_text']
+    prompt = f"How is {disease} treated? "
+    return generate_text(prompt)
 
 @st.cache_data(show_spinner=False)
 def get_urgency(disease):
-    return generator(f"The urgency of {disease} must be treated is by ", do_sample=True, num_return_sequences=1)[0]['generated_text']
+    prompt = f"What is the urgency of treating {disease}? "
+    return generate_text(prompt)
 
-# Search for hospitals using DuckDuckGo
 def search_hospitals(predicted_disease, user_location, max_results=5):
     query = f"{predicted_disease} hospital near {user_location} book appointment"
     results = []
@@ -91,7 +103,7 @@ if st.button("🩺 Detect Disease"):
     prediction = model.predict(input_data)
     predicted_disease = prediction[0]
 
-    with st.spinner("🔍 Fetching..."):
+    with st.spinner("🔍 Fetching information..."):
         definition = get_definition(predicted_disease)
         treatment = get_treatment(predicted_disease)
         urgency = get_urgency(predicted_disease)
