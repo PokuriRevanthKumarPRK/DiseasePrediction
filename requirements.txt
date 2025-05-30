@@ -8,3 +8,4 @@ tensorflow
 tf-keras
 torch
 duckduckgo-search
+wikipedia
