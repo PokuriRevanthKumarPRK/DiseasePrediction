@@ -12,7 +12,8 @@ def load_model():
 @st.cache_resource
 def load_generator():
     # BioGPT is a causal language model, so use text-generation pipeline
-    return pipeline("text-generation", model="microsoft/biogpt", max_length=150)
+    return pipeline("text-generation", model="sshleifer/tiny-gpt2", max_length=150)
+
 
 model = load_model()
 generator = load_generator()
