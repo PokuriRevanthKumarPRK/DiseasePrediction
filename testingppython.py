@@ -12,7 +12,7 @@ def load_model():
 
 @st.cache_resource
 def load_generator():
-    return pipeline("text-generation", model="distilgpt2")
+    return pipeline("text-generation", model="google/flan-t5-base")
 
 model = load_model()
 generator = load_generator()
@@ -49,15 +49,16 @@ symptom_list = ['itching', 'skin_rash', 'nodal_skin_eruptions', 'continuous_snee
 
 @st.cache_data(show_spinner=False)
 def get_definition(disease):
-    return generator(f"{disease} is ", max_length=50, num_return_sequences=1)[0]['generated_text']
+    return generator(f"Define the disease {disease}.", max_length=50, num_return_sequences=1)[0]['generated_text']
 
 @st.cache_data(show_spinner=False)
 def get_treatment(disease):
-    return generator(f"In studies, {disease} is treated by ", do_sample=True, num_return_sequences=1)[0]['generated_text']
+    return generator(f"What are the common treatments for {disease}?", do_sample=True, num_return_sequences=1)[0]['generated_text']
 
 @st.cache_data(show_spinner=False)
 def get_urgency(disease):
-    return generator(f"The urgency of {disease} must be treated is by ", do_sample=True, num_return_sequences=1)[0]['generated_text']
+    return generator(f"How urgent is treatment for {disease}?", do_sample=True, num_return_sequences=1)[0]['generated_text']
+
 
 # Search for hospitals using DuckDuckGo
 def search_hospitals(predicted_disease, user_location, max_results=5):
